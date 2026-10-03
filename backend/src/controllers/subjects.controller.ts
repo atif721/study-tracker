@@ -65,3 +65,25 @@ export async function updateSubject(req: Request, res: Response) {
     res.status(500).json({ error: "Failed to update subject" });
   }
 }
+
+export async function deleteSubject(req: Request, res: Response) {
+  const id = Number(req.params.id);
+
+  if (!Number.isInteger(id)) {
+    res.status(400).json({ error: "invalid id" });
+    return;
+  }
+
+  try {
+    const result = await pool.query<Subject>("DELETE FROM subjects WHERE id = $1 RETURNING *", [id]);
+
+    if (result.rows.length === 0) {
+      res.status(404).json({ error: "Subject not found" });
+      return;
+    }
+    res.status(204).send();
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to delete subject" });
+  }
+}
