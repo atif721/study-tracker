@@ -23,6 +23,7 @@ export async function createSubject(req: Request, res: Response) {
     const result = await pool.query<Subject>("INSERT INTO subjects (name) VALUES ($1) RETURNING *", [name.trim()]);
     res.status(201).json(result.rows[0]);
   } catch (err) {
+    // 23505 = Postgres unique violation (name already exists)
     if ((err as { code?: string }).code === "23505") {
       res.status(409).json({ error: "Subject already exist" });
       return;
