@@ -15,7 +15,7 @@ export async function createSession(req: Request, res: Response) {
     return;
   }
 
-  if ((studied_on !== undefined && typeof studied_on !== "string") || !/^\d{4}-\d{2}-\d{2}$/.test(studied_on)) {
+  if (studied_on !== undefined && (typeof studied_on !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(studied_on))) {
     res.status(400).json({ error: "studied_on must be YYYY-MM-DD" });
     return;
   }
@@ -28,7 +28,7 @@ export async function createSession(req: Request, res: Response) {
   try {
     const result = await pool.query<Session>(
       `INSERT INTO sessions (subject_id, minutes, studied_on, note)
-       VALUES ($1 $2 COELESCE($3::date, CURRENT_DATE), $4)
+       VALUES ($1, $2, COALESCE($3::date, CURRENT_DATE), $4)
        RETURNING *`,
       [subject_id, minutes, studied_on ?? null, note ?? null],
     );
