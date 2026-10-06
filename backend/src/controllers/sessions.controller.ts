@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import { pool, Session } from "../db";
 
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
 export async function createSession(req: Request, res: Response) {
   const { subject_id, minutes, studied_on, note } = req.body ?? {};
 
@@ -15,7 +17,7 @@ export async function createSession(req: Request, res: Response) {
     return;
   }
 
-  if (studied_on !== undefined && (typeof studied_on !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(studied_on))) {
+  if (studied_on !== undefined && (typeof studied_on !== "string" || !DATE_RE.test(studied_on))) {
     res.status(400).json({ error: "studied_on must be YYYY-MM-DD" });
     return;
   }
@@ -47,5 +49,58 @@ export async function createSession(req: Request, res: Response) {
     }
     console.error(err);
     res.status(500).json({ error: "Failed to create session" });
+  }
+}
+
+// getsession logic
+export async function getSessions(req: Request, res: Response) {
+  const { subject_id, from, to } = req.query;
+  const conditions: string[] = [];
+  const params: unknown[] = [];
+
+  if (subject_id !== undefined) {
+    const id = Number(subject_id);
+    if (!Number.isInteger(id)) {
+      res.status(400).json({ error: "subject_id must be an integer" });
+      return;
+    }
+    params.push(id);
+    conditions.push(`s.subject_id = $${params.length}`);
+  }
+
+  if (from !== undefined) {
+    if (typeof from !== "string" || !DATE_RE.test(from)) {
+      res.status(400).json({ error: "from must be YYYY-MM-DD" });
+      return;
+    }
+    params.push(from);
+    conditions.push(`s.studied_on >= $${params.length}::date`);
+  }
+
+  if (to !== undefined) {
+    if (typeof to !== "string" || !DATE_RE.test(to)) {
+      res.status(400).json({ error: "to must be YYYY-MM-DD" });
+      return;
+    }
+    params.push(to);
+    conditions.push(`s.studied_on >= $${params.length}::date`);
+  }
+
+  const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
+
+  try {
+    const result = await pool.query<Session & { subject_name: string }>(
+      `SELECT s.id, s.subject_id, sub.name AS subject_name,
+              s.minutes, s.studied_on, s.note, s.created_at
+        FROM sessions s
+        JOIN subjects sub ON sub.id = s.subject_id
+        ${where}
+        ORDER BY s.studied_on DESC, s.id DESC`,
+      params,
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch session" });
   }
 }
