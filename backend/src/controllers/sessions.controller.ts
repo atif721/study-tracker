@@ -104,3 +104,57 @@ export async function getSessions(req: Request, res: Response) {
     res.status(500).json({ error: "Failed to fetch session" });
   }
 }
+
+export async function getSummary(req: Request, res: Response) {
+  const { from, to } = req.query;
+
+  if ((from === undefined) !== (to === undefined)) {
+    res.status(400).json({ error: "provide both from and to, or neither" });
+    return;
+  }
+
+  if (from !== undefined && (typeof from !== "string" || !DATE_RE.test(from))) {
+    res.status(400).json({ error: "from must be YYYY-MM-DD" });
+    return;
+  }
+
+  if (to !== undefined && (typeof to !== "string" || !DATE_RE.test(to))) {
+    res.status(400).json({ error: "to must be YYYY-MM-DD" });
+    return;
+  }
+
+  try {
+    const result = await pool.query<{
+      subject_id: number;
+      subject_name: string;
+      total_minutes: number;
+      session_count: number;
+    }>(
+      `WITH r AS (
+        SELECT COALESCE($1::date, date_trunc('week', CURRENT_DATE)::date) AS d_from,
+               COALESCE($2::date, (date_trunc('week', CURRENT_DATE) + interval '6 days')::date) AS d_to      
+      )
+      SELECT sub.id AS subject_id,
+             sub.name AS subject_name,
+             COALESCE(SUM(s.minutes), 0)::int AS total_minutes,
+             COUNT(s.id)::int AS session_count
+      FROM subjects sub
+      CROSS JOIN r
+      LEFT JOIN sessions s
+         ON s.subject_id = sub.id
+         AND s.studied_on BETWEEN r.d_from AND r.d_to
+        GROUP BY sub.id, sub.name
+        ORDER BY total_minutes DESC, sub.name`,
+      [from ?? null, to ?? null],
+    );
+    res.json(result.rows);
+  } catch (err) {
+    const code = (err as { code?: string }).code;
+    if (code === "22007" || code === "22008") {
+      res.status(400).json({ error: "invalid date" });
+      return;
+    }
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch summary" });
+  }
+}
