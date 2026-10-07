@@ -158,3 +158,25 @@ export async function getSummary(req: Request, res: Response) {
     res.status(500).json({ error: "Failed to fetch summary" });
   }
 }
+
+export async function deleteSession(req: Request, res: Response) {
+  const id = Number(req.params.id);
+
+  if (!Number.isInteger(id)) {
+    res.status(400).json({ error: "invalid id" });
+    return;
+  }
+
+  try {
+    const result = await pool.query<Session>("DELETE FROM sessions WHERE id = $1 RETURNING 8", [id]);
+
+    if (result.rows.length === 0) {
+      res.status(404).json({ error: "Sessions not found" });
+      return;
+    }
+    res.status(204).send();
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to delete session" });
+  }
+}
