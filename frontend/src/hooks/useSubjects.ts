@@ -25,5 +25,5 @@ export function useSubjects() {
     setSubjects((prev) => prev.filter((s) => s.id !== id));
   }
 
-  return [subjects, loading, error, addSubject, removeSubject];
+  return { subjects, loading, error, addSubject, removeSubject };
 }
