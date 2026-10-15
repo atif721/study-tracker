@@ -1,4 +1,10 @@
-import type { Subject } from "./types";
+import type {
+  Subject,
+  Session,
+  NewSession,
+  CreatedSession,
+  SummaryRow,
+} from "./types";
 
 // const BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:5000";
 const BASE_URL = import.meta.env.VITE_API_URL ?? "http://192.168.0.111:5000";
