@@ -43,3 +43,15 @@ export const createSubject = (name: string) => {
 export const deleteSubject = (id: number) => {
   return request<void>(`/subjects/${id}`, { method: "DELETE" });
 };
+
+export const getSessions = () => {
+  return request<Session[]>("/sessions");
+};
+
+export const createSession = (input: NewSession) => {
+  return request<CreatedSession>("/sessions", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+};
+
