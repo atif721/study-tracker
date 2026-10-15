@@ -55,3 +55,13 @@ export const createSession = (input: NewSession) => {
   });
 };
 
+export const deleteSession = (id: number) => {
+  return request<void>(`/sessions/${id}`, {
+    method: "DELETE",
+  });
+};
+
+export const getSummary = (from?: string, to?: string) => {
+  const query = from && to ? `?from=${from}&to=${to}` : "";
+  return request<SummaryRow[]>(`/sessions/summary${query}`);
+};
