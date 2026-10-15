@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Subject } from "../types";
+import type { Subject } from "../utils/types";
 
 interface SubjectListProps {
   subjects: Subject[];

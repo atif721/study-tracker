@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { createSubject, getSubjects, deleteSubject } from "../api";
-import type { Subject } from "../types";
+import { createSubject, getSubjects, deleteSubject } from "../utils/api";
+import type { Subject } from "../utils/types";
 
 export function useSubjects() {
   const [subjects, setSubjects] = useState<Subject[]>([]);
@@ -17,7 +17,9 @@ export function useSubjects() {
   async function addSubject(name: string) {
     const created = await createSubject(name);
 
-    setSubjects((prev) => [...prev, created].sort((a, b) => a.name.localeCompare(b.name)));
+    setSubjects((prev) =>
+      [...prev, created].sort((a, b) => a.name.localeCompare(b.name)),
+    );
   }
 
   async function removeSubject(id: number) {
