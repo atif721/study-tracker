@@ -1,9 +1,13 @@
+import SessionForm from "./components/SessionForm";
 import SubjectForm from "./components/SubjectForm";
 import SubjectList from "./components/SubjectList";
+import { useSessions } from "./hooks/useSessions";
 import { useSubjects } from "./hooks/useSubjects";
 
 const App = () => {
   const { subjects, loading, error, addSubject, removeSubject } = useSubjects();
+
+  const { addSession } = useSessions();
 
   return (
     <div className="min-h-screen bg-gray-100 p-8">
@@ -17,6 +21,7 @@ const App = () => {
           error={error}
           onDelete={removeSubject}
         />
+        <SessionForm subjects={subjects} onAdd={addSession} />
       </div>
     </div>
   );
