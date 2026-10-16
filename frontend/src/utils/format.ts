@@ -10,4 +10,10 @@ export function formatMinutes(total: number): string {
   return `${hours}h ${mins}m`;
 }
 
-
+export function formatDate(iso: string): string {
+  const [year, month, day] = iso.split("-").map(Number);
+  return new Date(year, month - 1, day).toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+  });
+}
